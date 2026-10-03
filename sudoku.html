@@ -372,12 +372,14 @@
         <button id="newGame">NEW GAME</button>
         <button id="check">CHECK</button>
         <button id="solve">SOLVE</button>
+        <button id="audioToggle">♪ SOUND: ON</button>
       </div>
     </div>
   </div>
 
-  <div class="footer">INSERT COIN &mdash; CLICK A CELL &middot; TYPE 1-9 OR USE PAD<br>BACKSPACE/DEL CLEARS &middot; ARROWS MOVE</div>
+  <div class="footer">INSERT COIN &mdash; CLICK A CELL &middot; TYPE 1-9 OR USE PAD<br>BACKSPACE/DEL CLEARS &middot; ARROWS MOVE &middot; 'M' MUTES AUDIO</div>
 
+<script src="audio.js"></script>
 <script>
 (function () {
   "use strict";
@@ -628,6 +630,7 @@
     mistakes++;
     mistakesEl.textContent = String(mistakes);
     mistakesEl.classList.add("bad");
+    if (window.ArcadeAudio) window.ArcadeAudio.playError();
   }
 
   // Flash any row/col/box that just became fully & correctly filled
@@ -698,7 +701,11 @@
       // count a mistake once per wrong cell
       if (num !== solution[row][col]) {
         registerMistake(row, col);
+      } else {
+        if (window.ArcadeAudio) window.ArcadeAudio.playBlip();
       }
+    } else {
+      if (window.ArcadeAudio) window.ArcadeAudio.playBlip();
     }
 
     applyHighlights();
@@ -714,6 +721,7 @@
       solved = true;
       stopTimer();
       setStatus("*** YOU WIN! " + fmtTime(elapsed) + " / MISS " + mistakes + " ***", "win");
+      if (window.ArcadeAudio) window.ArcadeAudio.playWin();
     }
   }
 
@@ -751,10 +759,12 @@
     }
     if (hasError) {
       setStatus("ERROR! BAD INPUT DETECTED", "err");
+      if (window.ArcadeAudio) window.ArcadeAudio.playError();
     } else if (isComplete()) {
       solved = true;
       stopTimer();
       setStatus("*** YOU WIN! " + fmtTime(elapsed) + " / MISS " + mistakes + " ***", "win");
+      if (window.ArcadeAudio) window.ArcadeAudio.playWin();
     } else if (anyFilled) {
       setStatus("LOOKING GOOD... KEEP GOING", null);
     } else {
@@ -769,12 +779,17 @@
     render();
     updateProgress();
     setStatus("GAME OVER - SOLUTION SHOWN", null);
+    if (window.ArcadeAudio) window.ArcadeAudio.playGameOver();
   }
 
   function newGame() {
     const remove = parseInt(document.getElementById("difficulty").value, 10);
     stopTimer();
     setStatus("LOADING LEVEL...", null);
+    if (window.ArcadeAudio) {
+      window.ArcadeAudio.playStart();
+      window.ArcadeAudio.playTheme();
+    }
     setTimeout(() => {
       puzzle = generate(remove);
       current = clone(puzzle);
@@ -788,6 +803,24 @@
 
   // ---------- Events ----------
 
+  const audioToggleBtn = document.getElementById("audioToggle");
+  function updateAudioButton() {
+    if (!audioToggleBtn || !window.ArcadeAudio) return;
+    const muted = window.ArcadeAudio.isMuted();
+    audioToggleBtn.textContent = muted ? "♪ SOUND: OFF" : "♪ SOUND: ON";
+    audioToggleBtn.style.opacity = muted ? "0.6" : "1.0";
+  }
+
+  if (audioToggleBtn) {
+    updateAudioButton();
+    audioToggleBtn.addEventListener("click", () => {
+      if (window.ArcadeAudio) {
+        window.ArcadeAudio.toggleMute();
+        updateAudioButton();
+      }
+    });
+  }
+
   document.getElementById("numpad").addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
@@ -799,6 +832,15 @@
   document.getElementById("solve").addEventListener("click", solveBoard);
 
   document.addEventListener("keydown", (e) => {
+    // 'M' toggles audio mute
+    if (e.key === "m" || e.key === "M") {
+      if (window.ArcadeAudio) {
+        window.ArcadeAudio.toggleMute();
+        updateAudioButton();
+      }
+      return;
+    }
+
     // Arrow keys work even without a current selection
     if (e.key.startsWith("Arrow")) {
       e.preventDefault();
