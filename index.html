@@ -4,8 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SUDOKU — ARCADE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
-  /* Retro pixel font with graceful monospace fallback (no network required) */
+  /* Retro pixel font with webfont + graceful monospace fallback */
   @font-face {
     font-family: "PressStart";
     src: local("Press Start 2P");
@@ -29,7 +32,7 @@
   * { box-sizing: border-box; }
 
   html, body {
-    font-family: "PressStart", "Courier New", monospace;
+    font-family: "Press Start 2P", "PressStart", "Courier New", monospace;
     background: var(--bg);
     color: var(--neon);
     margin: 0;
@@ -214,20 +217,45 @@
   select:hover { background: var(--thick); color: var(--bg); box-shadow: 0 0 12px var(--thick); }
   select option { background: var(--panel); color: var(--neon); }
 
-  /* ---------- Game info panel ---------- */
+  /* ---------- Game info panel & layout ---------- */
   .game-wrap {
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
+    width: min(92vw, 450px);
+    margin: 0 auto;
+    padding-top: 4px;
   }
-  #board { order: 2; }
   .side {
     display: contents;        /* let info/numpad/controls flow in game-wrap order */
   }
-  #info { order: 1; }
-  .numpad { order: 3; }
-  .controls { order: 4; }
+  h1 {
+    order: 1;
+    margin: 4px 0 10px;
+    font-size: clamp(0.9rem, 4.5vw, 1.5rem);
+    color: var(--neon);
+    letter-spacing: 2px;
+    text-shadow: 0 0 6px var(--neon), 0 0 12px rgba(57,255,20,0.6);
+    animation: flicker 4s infinite;
+    text-align: center;
+    padding: 0 54px;
+  }
+  .status {
+    order: 2;
+    min-height: 22px;
+    margin-bottom: 10px;
+    font-size: 0.6rem;
+    line-height: 1.4;
+    text-align: center;
+    color: var(--user);
+    text-shadow: 0 0 6px currentColor;
+  }
+  #torii {
+    order: 3;
+  }
   #info {
+    order: 4;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 6px;
@@ -255,7 +283,31 @@
   #mistakes.bad { color: var(--error); }
   #progress.done { color: var(--given); }
 
+  #board {
+    order: 5;
+  }
+
+  .numpad {
+    order: 6;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-top: 16px;
+    width: min(92vw, 450px);
+  }
+
+  .controls {
+    order: 7;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+    justify-content: center;
+    max-width: 450px;
+  }
+
   .footer {
+    order: 8;
     margin-top: 18px;
     font-size: 0.5rem;
     line-height: 1.8;
@@ -264,65 +316,38 @@
     max-width: 450px;
   }
 
-  /* ---------- Responsive layout ---------- */
-  @media (max-width: 480px) {
-    body { padding: 14px 8px 28px; }
-    h1 { font-size: clamp(0.8rem, 6vw, 1.2rem); }
-    .info-label { font-size: 0.38rem; }
-    .info-value { font-size: 0.55rem; }
-    .numpad { grid-template-columns: repeat(5, 1fr); gap: 6px; }
-    .numpad button { padding: 12px 0; font-size: 0.8rem; }
-    .controls { gap: 6px; }
-    button, select { font-size: 0.52rem; padding: 9px 8px; }
-  }
-  /* Side-by-side layout on wide screens */
-  @media (min-width: 900px) and (orientation: landscape) {
-    .game-wrap {
-      display: grid;
-      grid-template-columns: auto 240px;
-      grid-template-rows: auto auto auto;
-      grid-template-areas:
-        "board info"
-        "board numpad"
-        "board controls";
-      gap: 10px 24px;
-      align-items: start;
-      justify-content: center;
-    }
-    #board    { grid-area: board; align-self: center; }
-    #info     { grid-area: info;    width: 240px; grid-template-columns: repeat(2, 1fr); }
-    .numpad   { grid-area: numpad;  width: 240px; }
-    .controls { grid-area: controls; max-width: 240px; }
-  }
-  /* Extreme top-right floating audio button */
+  /* Audio toggle button: static in document flow (not fixed viewport overlay), pinned top-right on mobile */
   .floating-audio-btn {
-    position: fixed;
-    top: 14px;
-    right: 14px;
-    z-index: 10001;
+    position: absolute;
+    top: 2px;
+    right: 0;
+    z-index: 10;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    font-family: "PressStart", "Courier New", monospace;
-    font-size: clamp(0.48rem, 2.2vw, 0.62rem);
-    padding: 10px 14px;
+    font-family: "Press Start 2P", "PressStart", "Courier New", monospace;
+    font-size: 0.6rem;
+    padding: 10px 12px;
     background: var(--panel);
     color: var(--neon);
-    border: 2px solid var(--neon);
+    border: 3px solid var(--neon);
     border-radius: 0;
     cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 1px;
-    box-shadow: 0 0 10px rgba(57, 255, 20, 0.45), inset 0 0 6px rgba(57, 255, 20, 0.15);
-    transition: all 0.12s ease;
+    box-shadow: 0 0 6px rgba(57, 255, 20, 0.4), inset 0 0 6px rgba(57, 255, 20, 0.15);
+    transition: all 0.05s;
     user-select: none;
   }
   .floating-audio-btn:hover {
     background: var(--neon);
     color: var(--bg);
-    box-shadow: 0 0 16px var(--neon);
-    transform: scale(1.03);
+    box-shadow: 0 0 12px var(--neon);
+  }
+  .floating-audio-btn:hover .audio-state-text {
+    color: var(--bg);
+    text-shadow: none;
   }
   .floating-audio-btn:active {
     transform: translate(2px, 2px);
@@ -341,13 +366,171 @@
     color: var(--bg);
     box-shadow: 0 0 8px #6a6a9a;
   }
+  .floating-audio-btn.muted:hover .audio-state-text {
+    color: var(--bg);
+  }
+  .floating-audio-btn.muted:hover .pixel-speaker .spk-body,
+  .floating-audio-btn.muted:hover .pixel-speaker .spk-x {
+    fill: var(--bg);
+  }
+
+  /* Pixel art speaker icon in neon pink (#ff00ff) */
+  .pixel-speaker {
+    width: 18px;
+    height: 14px;
+    display: block;
+    flex-shrink: 0;
+    image-rendering: pixelated;
+  }
+  .pixel-speaker .spk-body,
+  .pixel-speaker .spk-wave {
+    fill: #ff00ff; /* Rosa neón */
+    filter: drop-shadow(0 0 4px rgba(255, 0, 255, 0.85));
+  }
+  .pixel-speaker .spk-x {
+    fill: #ff3344;
+  }
+  .pixel-speaker .spk-mute {
+    display: none;
+  }
+  .floating-audio-btn.muted .pixel-speaker .spk-waves {
+    display: none;
+  }
+  .floating-audio-btn.muted .pixel-speaker .spk-mute {
+    display: block;
+  }
+  .floating-audio-btn.muted .pixel-speaker .spk-body {
+    fill: #6a6a9a;
+    filter: none;
+  }
+  .floating-audio-btn .audio-state-text {
+    color: var(--neon);
+    text-shadow: 0 0 6px var(--neon);
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+  }
+  .floating-audio-btn.muted .audio-state-text {
+    color: #6a6a9a;
+    text-shadow: none;
+  }
+
+  /* Responsive adjustments for mobile screens */
   @media (max-width: 480px) {
+    body { padding: 14px 8px 28px; }
+    h1 { font-size: clamp(0.72rem, 4.2vw, 1rem); padding: 0 44px; margin-bottom: 8px; }
+    .status { font-size: 0.52rem; min-height: 18px; margin-bottom: 8px; }
+    .info-label { font-size: 0.38rem; }
+    .info-value { font-size: 0.55rem; }
+    .numpad { grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 12px; }
+    .numpad button { padding: 12px 0; font-size: 0.8rem; }
+    .controls { gap: 6px; margin-top: 12px; }
+    button, select { font-size: 0.52rem; padding: 9px 8px; }
     .floating-audio-btn {
-      top: 10px;
-      right: 10px;
+      top: 0;
+      right: 0;
       padding: 6px 8px;
       font-size: 0.44rem;
-      gap: 4px;
+      gap: 5px;
+    }
+    .floating-audio-btn .audio-state-text {
+      font-size: 0.44rem;
+    }
+    .pixel-speaker {
+      width: 14px;
+      height: 11px;
+    }
+  }
+
+  /* Desktop side-by-side layout (>= 820px) */
+  @media (min-width: 820px) {
+    .game-wrap {
+      display: grid;
+      grid-template-columns: 450px 240px;
+      grid-template-areas:
+        "title     audio"
+        "status    ."
+        "torii     ."
+        "board     info"
+        "board     numpad"
+        "board     controls"
+        "footer    footer";
+      column-gap: 28px;
+      row-gap: 10px;
+      align-items: start;
+      justify-content: center;
+      width: auto;
+      padding-top: 0;
+    }
+
+    /* Columna 1 (izquierda): Título, Status, Torii y Tablero centrados sobre el tablero */
+    h1 {
+      grid-area: title;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      justify-self: center;
+      align-self: center;
+    }
+    .status {
+      grid-area: status;
+      margin: 0;
+      min-height: 20px;
+      text-align: center;
+      justify-self: center;
+    }
+    #torii {
+      grid-area: torii;
+      width: 135px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      justify-self: center;
+    }
+    #board {
+      grid-area: board;
+      width: 450px;
+      aspect-ratio: 1 / 1;
+      justify-self: center;
+      align-self: start;
+      margin: 0;
+    }
+
+    /* Columna 2 (derecha): Botón de audio alineado a la derecha con los controles */
+    .floating-audio-btn {
+      position: static;
+      grid-area: audio;
+      justify-self: end;
+      align-self: center;
+      margin: 0;
+      padding: 10px 12px;
+      font-size: 0.6rem;
+    }
+    #info {
+      grid-area: info;
+      width: 240px;
+      grid-template-columns: repeat(2, 1fr);
+      margin: 0;
+      align-self: start;
+    }
+    .numpad {
+      grid-area: numpad;
+      width: 240px;
+      margin: 0;
+      align-self: start;
+    }
+    .controls {
+      grid-area: controls;
+      width: 240px;
+      max-width: 240px;
+      margin: 0;
+      align-self: start;
+    }
+    .footer {
+      grid-area: footer;
+      grid-column: 1 / -1;
+      justify-self: center;
+      margin-top: 16px;
+      max-width: 600px;
     }
   }
 
@@ -358,37 +541,68 @@
 </style>
 </head>
 <body>
-  <!-- Botón adicional para activar/silenciar sonido arriba a la derecha extrema -->
-  <button id="floatingAudioToggle" class="floating-audio-btn" aria-label="Toggle Sound" title="Sound is ON (Click or press M to mute)">
-    🔊 SOUND: ON
-  </button>
-
-  <h1>&#9608; SUDOKU &#9608;</h1>
-  <div id="status" class="status"></div>
-
-  <!-- Pixel-art torii gate banner (sits above the board, same width) -->
-  <svg id="torii" viewBox="0 0 23 12" preserveAspectRatio="xMidYMid meet"
-       xmlns="http://www.w3.org/2000/svg" aria-label="Torii gate">
-    <g shape-rendering="crispEdges">
-      <!-- Top beam (kasagi) with upturned ends, row 0 (eaves) and row 1 (main) -->
-      <rect x="1"  y="0" width="2" height="1"/>
-      <rect x="20" y="0" width="2" height="1"/>
-      <rect x="0"  y="1" width="23" height="1"/>
-      <!-- Shimaki (dark underline strip of top beam) -->
-      <rect x="1"  y="2" width="21" height="1" class="dark"/>
-      <!-- Gap -->
-      <!-- Second beam (nuki) rows 4-5 -->
-      <rect x="3"  y="4" width="17" height="2"/>
-      <!-- Center plaque (gakuzuka) -->
-      <rect x="10" y="2" width="3" height="2" class="dark"/>
-      <!-- Left pillar (hashira) rows 6-11, slightly tapered -->
-      <rect x="4"  y="6" width="3" height="6"/>
-      <!-- Right pillar -->
-      <rect x="16" y="6" width="3" height="6"/>
-    </g>
-  </svg>
-
   <div class="game-wrap">
+    <!-- Botón superior de audio con bocina pixel art rosa neón y etiqueta ON/OFF -->
+    <button id="floatingAudioToggle" class="floating-audio-btn" aria-label="Toggle Sound" title="Sound is ON (Click or press M to mute)">
+      <svg class="pixel-speaker" viewBox="0 0 16 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <g shape-rendering="crispEdges">
+          <!-- Base de la bocina -->
+          <rect x="1" y="4" width="3" height="4" class="spk-body"/>
+          <!-- Cono expansivo -->
+          <rect x="4" y="3" width="2" height="6" class="spk-body"/>
+          <rect x="6" y="2" width="2" height="8" class="spk-body"/>
+          <rect x="8" y="1" width="2" height="10" class="spk-body"/>
+          <!-- Ondas de sonido cuando está ON -->
+          <g class="spk-waves">
+            <rect x="11" y="4" width="1" height="4" class="spk-wave"/>
+            <rect x="12" y="3" width="1" height="1" class="spk-wave"/>
+            <rect x="12" y="8" width="1" height="1" class="spk-wave"/>
+            <rect x="14" y="2" width="1" height="8" class="spk-wave"/>
+            <rect x="15" y="1" width="1" height="1" class="spk-wave"/>
+            <rect x="15" y="10" width="1" height="1" class="spk-wave"/>
+          </g>
+          <!-- Aspa de silencio cuando está OFF -->
+          <g class="spk-mute">
+            <rect x="11" y="3" width="1" height="1" class="spk-x"/>
+            <rect x="12" y="4" width="1" height="1" class="spk-x"/>
+            <rect x="13" y="5" width="2" height="2" class="spk-x"/>
+            <rect x="12" y="7" width="1" height="1" class="spk-x"/>
+            <rect x="11" y="8" width="1" height="1" class="spk-x"/>
+            <rect x="15" y="3" width="1" height="1" class="spk-x"/>
+            <rect x="14" y="4" width="1" height="1" class="spk-x"/>
+            <rect x="14" y="7" width="1" height="1" class="spk-x"/>
+            <rect x="15" y="8" width="1" height="1" class="spk-x"/>
+          </g>
+        </g>
+      </svg>
+      <span id="floatingAudioLabel" class="audio-state-text">ON</span>
+    </button>
+
+    <h1>&#9608; SUDOKU &#9608;</h1>
+    <div id="status" class="status"></div>
+
+    <!-- Pixel-art torii gate banner (sits above the board, same width) -->
+    <svg id="torii" viewBox="0 0 23 12" preserveAspectRatio="xMidYMid meet"
+         xmlns="http://www.w3.org/2000/svg" aria-label="Torii gate">
+      <g shape-rendering="crispEdges">
+        <!-- Top beam (kasagi) with upturned ends, row 0 (eaves) and row 1 (main) -->
+        <rect x="1"  y="0" width="2" height="1"/>
+        <rect x="20" y="0" width="2" height="1"/>
+        <rect x="0"  y="1" width="23" height="1"/>
+        <!-- Shimaki (dark underline strip of top beam) -->
+        <rect x="1"  y="2" width="21" height="1" class="dark"/>
+        <!-- Gap -->
+        <!-- Second beam (nuki) rows 4-5 -->
+        <rect x="3"  y="4" width="17" height="2"/>
+        <!-- Center plaque (gakuzuka) -->
+        <rect x="10" y="2" width="3" height="2" class="dark"/>
+        <!-- Left pillar (hashira) rows 6-11, slightly tapered -->
+        <rect x="4"  y="6" width="3" height="6"/>
+        <!-- Right pillar -->
+        <rect x="16" y="6" width="3" height="6"/>
+      </g>
+    </svg>
+
     <div id="board"></div>
 
     <div class="side">
@@ -434,12 +648,12 @@
         <button id="newGame">NEW GAME</button>
         <button id="check">CHECK</button>
         <button id="solve">SOLVE</button>
-        <button id="audioToggle">🔊 SOUND: ON</button>
+        <button id="audioToggle">SOUND: ON</button>
       </div>
     </div>
-  </div>
 
-  <div class="footer">INSERT COIN &mdash; CLICK A CELL &middot; TYPE 1-9 OR USE PAD<br>BACKSPACE/DEL CLEARS &middot; ARROWS MOVE &middot; 'M' MUTES AUDIO</div>
+    <div class="footer">INSERT COIN &mdash; CLICK A CELL &middot; TYPE 1-9 OR USE PAD<br>BACKSPACE/DEL CLEARS &middot; ARROWS MOVE &middot; 'M' MUTES AUDIO</div>
+  </div>
 
 <script src="audio.js"></script>
 <script>
@@ -869,22 +1083,25 @@
 
   const audioToggleBtn = document.getElementById("audioToggle");
   const floatingAudioToggleBtn = document.getElementById("floatingAudioToggle");
+  const floatingAudioLabel = document.getElementById("floatingAudioLabel");
 
   function updateAudioButtons() {
     if (!window.ArcadeAudio) return;
     const muted = window.ArcadeAudio.isMuted();
-    const icon = muted ? "🔇" : "🔊";
     const status = muted ? "OFF" : "ON";
-    const label = `${icon} SOUND: ${status}`;
 
+    // Botón inferior: sólo texto SOUND: ON / OFF (sin iconos ni bocina)
     if (audioToggleBtn) {
-      audioToggleBtn.textContent = label;
+      audioToggleBtn.textContent = `SOUND: ${status}`;
       audioToggleBtn.classList.toggle("muted", muted);
       audioToggleBtn.title = muted ? "Activar sonido (M)" : "Silenciar sonido (M)";
     }
 
+    // Botón superior: bocina pixel art rosa neón + etiqueta ON / OFF (sin texto SOUND)
     if (floatingAudioToggleBtn) {
-      floatingAudioToggleBtn.textContent = label;
+      if (floatingAudioLabel) {
+        floatingAudioLabel.textContent = status;
+      }
       floatingAudioToggleBtn.classList.toggle("muted", muted);
       floatingAudioToggleBtn.title = muted ? "Activar sonido (M)" : "Silenciar sonido (M)";
     }
