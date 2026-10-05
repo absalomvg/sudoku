@@ -294,6 +294,63 @@
     .numpad   { grid-area: numpad;  width: 240px; }
     .controls { grid-area: controls; max-width: 240px; }
   }
+  /* Extreme top-right floating audio button */
+  .floating-audio-btn {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 10001;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: "PressStart", "Courier New", monospace;
+    font-size: clamp(0.48rem, 2.2vw, 0.62rem);
+    padding: 10px 14px;
+    background: var(--panel);
+    color: var(--neon);
+    border: 2px solid var(--neon);
+    border-radius: 0;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 0 10px rgba(57, 255, 20, 0.45), inset 0 0 6px rgba(57, 255, 20, 0.15);
+    transition: all 0.12s ease;
+    user-select: none;
+  }
+  .floating-audio-btn:hover {
+    background: var(--neon);
+    color: var(--bg);
+    box-shadow: 0 0 16px var(--neon);
+    transform: scale(1.03);
+  }
+  .floating-audio-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+  }
+  .floating-audio-btn.muted,
+  button#audioToggle.muted {
+    border-color: #6a6a9a;
+    color: #6a6a9a;
+    box-shadow: none;
+    opacity: 0.65;
+  }
+  .floating-audio-btn.muted:hover,
+  button#audioToggle.muted:hover {
+    background: #6a6a9a;
+    color: var(--bg);
+    box-shadow: 0 0 8px #6a6a9a;
+  }
+  @media (max-width: 480px) {
+    .floating-audio-btn {
+      top: 10px;
+      right: 10px;
+      padding: 6px 8px;
+      font-size: 0.44rem;
+      gap: 4px;
+    }
+  }
+
   /* Respect reduced-motion preference */
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; }
@@ -301,6 +358,11 @@
 </style>
 </head>
 <body>
+  <!-- Botón adicional para activar/silenciar sonido arriba a la derecha extrema -->
+  <button id="floatingAudioToggle" class="floating-audio-btn" aria-label="Toggle Sound" title="Sound is ON (Click or press M to mute)">
+    🔊 SOUND: ON
+  </button>
+
   <h1>&#9608; SUDOKU &#9608;</h1>
   <div id="status" class="status"></div>
 
@@ -372,7 +434,7 @@
         <button id="newGame">NEW GAME</button>
         <button id="check">CHECK</button>
         <button id="solve">SOLVE</button>
-        <button id="audioToggle">♪ SOUND: ON</button>
+        <button id="audioToggle">🔊 SOUND: ON</button>
       </div>
     </div>
   </div>
@@ -803,23 +865,50 @@
 
   // ---------- Events ----------
 
+  // ---------- Audio Controls Synchronization ----------
+
   const audioToggleBtn = document.getElementById("audioToggle");
-  function updateAudioButton() {
-    if (!audioToggleBtn || !window.ArcadeAudio) return;
+  const floatingAudioToggleBtn = document.getElementById("floatingAudioToggle");
+
+  function updateAudioButtons() {
+    if (!window.ArcadeAudio) return;
     const muted = window.ArcadeAudio.isMuted();
-    audioToggleBtn.textContent = muted ? "♪ SOUND: OFF" : "♪ SOUND: ON";
-    audioToggleBtn.style.opacity = muted ? "0.6" : "1.0";
+    const icon = muted ? "🔇" : "🔊";
+    const status = muted ? "OFF" : "ON";
+    const label = `${icon} SOUND: ${status}`;
+
+    if (audioToggleBtn) {
+      audioToggleBtn.textContent = label;
+      audioToggleBtn.classList.toggle("muted", muted);
+      audioToggleBtn.title = muted ? "Activar sonido (M)" : "Silenciar sonido (M)";
+    }
+
+    if (floatingAudioToggleBtn) {
+      floatingAudioToggleBtn.textContent = label;
+      floatingAudioToggleBtn.classList.toggle("muted", muted);
+      floatingAudioToggleBtn.title = muted ? "Activar sonido (M)" : "Silenciar sonido (M)";
+    }
+  }
+
+  function handleAudioToggle() {
+    if (window.ArcadeAudio) {
+      window.ArcadeAudio.toggleMute();
+      updateAudioButtons();
+    }
   }
 
   if (audioToggleBtn) {
-    updateAudioButton();
-    audioToggleBtn.addEventListener("click", () => {
-      if (window.ArcadeAudio) {
-        window.ArcadeAudio.toggleMute();
-        updateAudioButton();
-      }
-    });
+    audioToggleBtn.addEventListener("click", handleAudioToggle);
   }
+  if (floatingAudioToggleBtn) {
+    floatingAudioToggleBtn.addEventListener("click", handleAudioToggle);
+  }
+
+  // Listen for custom event from ArcadeAudio
+  window.addEventListener("arcade-audio-toggle", updateAudioButtons);
+
+  // Initialize button display states
+  updateAudioButtons();
 
   document.getElementById("numpad").addEventListener("click", (e) => {
     const btn = e.target.closest("button");
@@ -834,10 +923,7 @@
   document.addEventListener("keydown", (e) => {
     // 'M' toggles audio mute
     if (e.key === "m" || e.key === "M") {
-      if (window.ArcadeAudio) {
-        window.ArcadeAudio.toggleMute();
-        updateAudioButton();
-      }
+      handleAudioToggle();
       return;
     }
 

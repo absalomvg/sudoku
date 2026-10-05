@@ -33,12 +33,8 @@
   const audioElements = {};
   let useAudioFiles = true;
 
-  try {
-    const savedMute = localStorage.getItem("sudoku_arcade_muted");
-    if (savedMute !== null) {
-      isMuted = savedMute === "true";
-    }
-  } catch (e) {}
+  // Default to sound active on site load as requested
+  isMuted = false;
 
   function getAudioContext() {
     if (!audioCtx) {
@@ -447,24 +443,46 @@
         playTheme();
       }
     }
+
+    try {
+      window.dispatchEvent(new CustomEvent("arcade-audio-toggle", { detail: { muted: isMuted } }));
+    } catch (e) {}
+
     return isMuted;
   }
 
-  // Unlock audio context on user interaction
+  // Auto-start theme and unlock audio context on user interaction if initial autoplay was blocked
+  function tryAutoPlay() {
+    if (!isMuted) {
+      isPlayingTheme = true;
+      playTheme();
+    }
+  }
+
   function unlock() {
     getAudioContext();
     if (isPlayingTheme && !isMuted) {
       const bgm = audioElements["theme"];
       if (bgm && bgm.paused && useAudioFiles) {
         bgm.play().catch(() => playSynthThemeLoop());
+      } else if (!useAudioFiles && !themeIntervalId) {
+        playSynthThemeLoop();
       }
     }
   }
 
-  window.addEventListener("click", unlock, { once: false });
-  window.addEventListener("keydown", unlock, { once: false });
+  ["click", "keydown", "touchstart", "pointerdown"].forEach((evt) => {
+    window.addEventListener(evt, unlock, { passive: true });
+  });
 
   initAudioElements();
+
+  if (document.readyState === "complete" || document.readyState === "interactive") {
+    tryAutoPlay();
+  } else {
+    document.addEventListener("DOMContentLoaded", tryAutoPlay);
+  }
+  window.addEventListener("load", tryAutoPlay);
 
   global.ArcadeAudio = {
     init: function () {
