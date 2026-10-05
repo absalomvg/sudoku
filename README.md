@@ -1,8 +1,10 @@
 # Sudoku Arcade 🕹️
 
-Sitio web y juego de Sudoku estilo arcade retro desarrollado durante un workshop de AWS.
+Sitio web y juego de Sudoku estilo arcade retro desarrollado durante un workshop de AWS y mejorado con audio chiptune retro Atari.
 
-- **URL Original en AWS CloudFront:** [https://d2pjgvrh5olo6c.cloudfront.net/sudoku.html](https://d2pjgvrh5olo6c.cloudfront.net/sudoku.html)
+- **🌐 Despliegue en vivo en AWS Amplify:** [https://main.d10541uk0hc2v1.amplifyapp.com](https://main.d10541uk0hc2v1.amplifyapp.com)
+- **🐙 Repositorio en GitHub:** [https://github.com/absalomvg/sudoku](https://github.com/absalomvg/sudoku)
+- **☁️ URL Original del Workshop:** [https://d2pjgvrh5olo6c.cloudfront.net/sudoku.html](https://d2pjgvrh5olo6c.cloudfront.net/sudoku.html)
 
 ---
 
